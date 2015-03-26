@@ -8,8 +8,8 @@ class Pickup(Processor):
 	emptySlot = u'(?)'
 	gameOn = False
 	playerCount = 0
-	maxPlayers = 1
-	startDelay = 10
+	maxPlayers = 10
+	startDelay = 60
 	lastTeams = ""
 	serverIP = "154.127.61.63:27116"
 	serverPass = "apples"
@@ -37,6 +37,7 @@ class Pickup(Processor):
 	@match(r'^!sg$')
 	def game_start(self, event):
 		if not self.gameOn:
+#			self.changeTopic(event, u'This is a new topic')
 			self.playerCount = 0
 			self.gameOn = True
 			self.teams = self.teams_reset()
@@ -68,15 +69,14 @@ class Pickup(Processor):
 			for team in range(2):
 				for player in range(len(self.teams[0])):
 					players.append(self.teams[team][player][1:-1])
-#				event.addresponse(unicode(players), address=False)
 			self.gameOn = False
 			self.lastTeams = self.teams_display(self.teams)
 			event.addresponse(u'The game has started! PM\'ing all players the server details', address=False)
 			for player in players:
 				event.addresponse(u'Connect to %s with password %s' % (self.serverIP, self.serverPass), target=player, address=False)
+			self.playerCount = 0
 		else:
 			pass
-#			event.addresponse(u'Not full anymore', address=False)
 
 	@match(r'^!add\s?(\w?)$')
 	def game_add(self, event, team=None):
@@ -149,3 +149,7 @@ class Pickup(Processor):
 								self.teams[i][player] = self.emptySlot
 								break
 					event.addresponse(self.teams_display(self.teams), address=False)
+
+#	def changeTopic(self, event, topic):
+#		source = ibid.source[u'shadowfire']
+#		source.topic(channel, topic)

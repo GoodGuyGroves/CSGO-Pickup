@@ -54,7 +54,21 @@ class Pickup(Processor):
         if command == None:
             event.addresponse(u'Type "!help <command>" to get more help with that command.', target=event['sender']['nick'], notice=True, address=False)
             event.addresponse(u'!sg, !cg, !add, !rem, !status', target=event['sender']['nick'], notice=True, address=False)
-
+        elif command == "!sg" or command == "sg":
+            event.addresponse(u'!sg - Starts a pickup game for players to add to. Anyone can !sg.', target=event['sender']['nick'], notice=True, address=False)
+        elif command == "!cg" or command == "cg":
+            event.addresponse(u'!cg - Cancels a pickup game.', target=event['sender']['nick'], notice=True, address=False)
+        elif command == "!add" or command == "add":
+            event.addresponse(u'!add - Adds yourself to the pickup. You can either !add to join a random team or !add [a|b] to pick a team to add to.', target=event['sender']['nick'], notice=True, address=False)
+        elif command == "!status" or command == "status":
+            event.addresponse(u'!status - Lists players added to the pickup as well as slots open', target=event['sender']['nick'], notice=True, address=False)
+        else:
+            event.addresponse(u'Invalid selection', target=event['sender']['nick'], notice=True, address=False)
+            
+    @match(r'^!info$')
+    def info(self, event):
+        event.addresponse(u'GameBot based on Ibid. Pickup plugin by Russ. Type !help for more commands.', target=event['sender']['nick'], notice=True, address=False)
+    
     @match(r'^(?:!sg|!start)$')
     def game_start(self, event):
         if not self.gameOn:
@@ -86,27 +100,30 @@ class Pickup(Processor):
     @match(r'^!add\s?(\w?)$')
     def game_add(self, event, team=None):
         def playerAdd(nick, team):
-            for slot in range(len(self.teams[team])):
-                if self.teams[team][slot] == u'(?)':
-                    self.teams[team][slot] = u'(%s)' % nick
-                    self.playerCount += 1
-                    break
+            if self.teams[team].count(u'(?)') == 0:
+                event.addresponse(u'Team full!', address=False)
+                break
+            else:
+                for slot in range(len(self.teams[team])):
+                    if self.teams[team][slot] == u'(?)':
+                        self.teams[team][slot] = u'(%s)' % nick
+                        self.playerCount += 1
+                        event.addresponse(self.teams_display(self.teams), address=False)
+                        break
         if self.gameOn:
             if u'(%s)' % event['sender']['nick'] not in self.teams[0] and u'(%s)' % event['sender']['nick'] not in self.teams[1]:
                 if team == "":
-                    if teams[0].count(u'(?)') == 0:
+                    if self.teams[0].count(u'(?)') == 0:
                         playerAdd(event['sender']['nick'], 1)
-                    elif teams[1].count(u'(?)') == 0:
+                    elif self.teams[1].count(u'(?)') == 0:
                         playerAdd(event['sender']['nick'], 0)
                     else:
                         playerAdd(event['sender']['nick'], random.randint(0,1))
                     event.addresponse(self.teams_display(self.teams), address=False)
                 elif team.lower() == "a":
                     playerAdd(event['sender']['nick'], 0)
-                    event.addresponse(self.teams_display(self.teams), address=False)
                 elif team.lower() == "b":
                     playerAdd(event['sender']['nick'], 1)
-                    event.addresponse(self.teams_display(self.teams), address=False)
                 else:
                     event.addresponse(u'Invalid team selected', address=False)
             else:

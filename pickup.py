@@ -34,6 +34,27 @@ class Pickup(Processor):
         team += u', '.join(teams[1])
         return team
 
+    def startGame(self, event):
+        if self.playerCount == self.maxPlayers:
+            players = []
+            for team in range(2):
+                for player in range(len(self.teams[0])):
+                    players.append(self.teams[team][player][1:-1])
+            self.gameOn = False
+            self.lastTeams = self.teams_display(self.teams)
+            event.addresponse(u'The game has started! PM\'ing all players the server details', address=False)
+            for player in players:
+                event.addresponse(u'Paste this into your console to connect - password %s;connect %s' % (self.serverPass, self.serverIP), target=player, address=False)
+            self.playerCount = 0
+        else:
+            pass
+
+    @match(r'^(?:!help|!commands)?\s?(\w*)$')
+    def help(self, event, command=None):
+        if command == None:
+            event.addresponse(u'Type "!help <command>" to get more help with that command.', target=event['sender']['nick'], notice=True, address=False)
+            event.addresponse(u'!sg, !cg, !add, !rem, !status', target=event['sender']['nick'], notice=True, address=False)
+
     @match(r'^(?:!sg|!start)$')
     def game_start(self, event):
         if not self.gameOn:
@@ -62,40 +83,29 @@ class Pickup(Processor):
         else:
             event.addresponse(u'There is no game in progress.', address=False)
 
-    def startGame(self, event):
-        if self.playerCount == self.maxPlayers:
-            players = []
-            for team in range(2):
-                for player in range(len(self.teams[0])):
-                    players.append(self.teams[team][player][1:-1])
-            self.gameOn = False
-            self.lastTeams = self.teams_display(self.teams)
-            event.addresponse(u'The game has started! PM\'ing all players the server details', address=False)
-            for player in players:
-                event.addresponse(u'Connect to %s with password %s' % (self.serverIP, self.serverPass), target=player, address=False)
-            self.playerCount = 0
-        else:
-            pass
-
     @match(r'^!add\s?(\w?)$')
     def game_add(self, event, team=None):
-        def addPlayer(nick, team):
+        def playerAdd(nick, team):
             for slot in range(len(self.teams[team])):
                 if self.teams[team][slot] == u'(?)':
                     self.teams[team][slot] = u'(%s)' % nick
                     self.playerCount += 1
                     break
-
         if self.gameOn:
             if u'(%s)' % event['sender']['nick'] not in self.teams[0] and u'(%s)' % event['sender']['nick'] not in self.teams[1]:
                 if team == "":
-                    addPlayer(event['sender']['nick'], random.randint(0,1))
+                    if teams[0].count(u'(?)') == 0:
+                        playerAdd(event['sender']['nick'], 1)
+                    elif teams[1].count(u'(?)') == 0:
+                        playerAdd(event['sender']['nick'], 0)
+                    else:
+                        playerAdd(event['sender']['nick'], random.randint(0,1))
                     event.addresponse(self.teams_display(self.teams), address=False)
                 elif team.lower() == "a":
-                    addPlayer(event['sender']['nick'], 0)
+                    playerAdd(event['sender']['nick'], 0)
                     event.addresponse(self.teams_display(self.teams), address=False)
                 elif team.lower() == "b":
-                    addPlayer(event['sender']['nick'], 1)
+                    playerAdd(event['sender']['nick'], 1)
                     event.addresponse(self.teams_display(self.teams), address=False)
                 else:
                     event.addresponse(u'Invalid team selected', address=False)

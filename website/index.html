@@ -1,0 +1,95 @@
+<html>
+    <head>
+        <title>CS:GO Pickup</title>
+        <link rel="icon" type="image/png" href="favicon.png">
+        <link href='http://fonts.googleapis.com/css?family=Lato' rel='stylesheet' type='text/css'>
+        <style>
+            html {
+                border-top: 50px solid #cc333f;
+                position: relative;
+                height: 100%;
+                font-family: 'Lato', sans-serif;
+            }
+            body {
+                overflow: hidden;
+            }
+            .maincontainer {
+                width: 90%;
+                margin-left: 5%;
+                margin-right: 5%;
+                margin-top: 0%;
+                margin-bottom: 0%;
+                position: absolute;
+            }
+            .banner {
+                position: relative;
+                margin-top: -70px;
+            }
+            .wrapper {
+                margin-top: 10px;
+                position: absolute;
+                width: 100%;
+                overflow: hidden;
+            }
+            .mibbit {
+                overflow: hidden;
+                float: left;
+                margin-right: 30%;
+                border: 1px;
+            }
+            .botcommands {
+                float: right;
+                width: 29%;
+                overflow: hidden;
+                margin-left: 70%;
+                margin-right: 0;
+            }
+            .botcommands h1 {
+                text-align: center;
+                text-decoration: underline;
+                color: black;
+            }
+            h1 {
+                text-align: center;
+                color: white;
+            }
+            h2 {
+                text-align: center;
+            }
+            p {
+                text-align: left;
+                margin-left: 10%;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="banner">
+            <h1>#gopugs</h1>
+        </div>
+        <div class="maincontainer">
+            <div class="wrapper"
+                <div class="mibbit">
+                    <iframe frameborder="0" width="70%" height="80%" scrolling="no" src="http://widget.mibbit.com/?settings=cba323ad8e4495aaa9ee7664c778e9ef&server=mibbit.ShadowFire.org&channel=%23gopugs"></iframe>
+                </div>
+                <div class="botcommands">
+                    <h1 align="centre">Bot Commands</h1>
+                    <p>!sg - Starts a game</p>
+                    <p>!add - Randomly add to either team A or B</p>
+                    <p>!add [a|b] - Add to either team A or B</p>
+                    <p>!rem - Removes you from the game</p>
+                    <p>!status - Displays the players added and spots left</p>
+                    <h2>The Process</h2>
+                    <p><u>IRC</u><br>
+                       After a game has been started with the !sg command, the first 10 people to type !add (or !add [a|b]) will get a spot
+                       in the game. After all 10 spots have been filled, the bot will wait 60 seconds for any changes to be made such as player
+                       removals or swaps. After the timer the bot will PM every added player with the server IP address and password.</p>
+                    <p><u>CS:GO Server</u><br>
+                       Now that you have the server details from the bot, open CS:GO and connect. The server has a plugin running called warmod
+                       that will handle the in game aspects of the pickup. Once again you wait for all 10 people to join and type /ready in chat,
+                       the plugin will restart the round and go live with the competitive server settings (ESL config).</p>
+                    <p>If you're running Firefox and mibbit isn't loading, click <a href="http://widget.mibbit.com/?settings=cba323ad8e4495aaa9ee7664c778e9ef&server=mibbit.ShadowFire.org&channel=%23gopugs">this</a> instead.</p>
+                </div>
+            </div>
+        </div>
+    </body>
+</html>

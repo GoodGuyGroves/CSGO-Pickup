@@ -2,10 +2,6 @@ import ibid
 from ibid.plugins import Processor, handler, match
 import random
 
-##### TO DO #####
-# Add !server to show IP but no pass
-# Figure out how ibid does databases so I can maybe make use of it
-# Add some admin commands like !forcemove/!forceremove/!forceadd and !swap
 
 class Pickup(Processor):
     event_types = (u'message', u'state') # Added 'state' to be able to handle joins/quits/nick change events
@@ -18,7 +14,7 @@ class Pickup(Processor):
     lastTeams = u''
     serverIP = "154.127.61.63:27116"
     serverPass = "apples"
-    teams = [[emptySlot for x in range(5)] for x in range(2)] # Two dimensional array (list?) where teams[0] is team A and teams[1] is team B
+    teams = [[emptySlot for x in range(5)] for xt in range(2)] # Two dimensional array (list?) where teams[0] is team A and teams[1] is team B
 
     def teams_reset(self):
         """Resets the teams in the format [u'(?)', u'(?)', u'(?)', u'(?)', u'(?)']"""

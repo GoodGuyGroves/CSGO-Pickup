@@ -61,7 +61,7 @@ class Pickup(Processor):
             pass # Dunno
 
     def playerAdd(self, nick, team):
-        """Adds a player to a team. 
+        """Adds a player to a team.
         team a = 0, team b = 1"""
         if self.teams[team].count(u'(?)') == 0:
             event.addresponse(u'Team full!', address=False)
@@ -72,9 +72,9 @@ class Pickup(Processor):
                     self.teams[team][index] = u'(%s)' % nick
                     self.playerCount += 1
                     return
-    
+
     def playerRemove(self, nick, team):
-        """Removes a player from a team. 
+        """Removes a player from a team.
         team a = 0, team b = 1"""
         if self.teams[team].count(u'(%s)' % nick) != 1:
             event.addresponse(u'Player not added', address=False)
@@ -206,7 +206,7 @@ class Pickup(Processor):
                 event.addresponse(u'You\'re not added to the game.', address=False)
         else:
             event.addresponse(u'No game in progress.', address=False)
-            
+
 
     # So because we're not capturing text from the chat for this, we must make
     # use of @handler instead of @match which will let us get access to other

@@ -14,7 +14,7 @@ class Pickup(Processor):
     lastTeams = u''
     serverIP = "154.127.61.63:27116"
     serverPass = "apples"
-    teams = [[emptySlot for x in range(5)] for xt in range(2)] # Two dimensional array (list?) where teams[0] is team A and teams[1] is team B
+    teams = [[emptySlot for x in range(5)] for x in range(2)] # Two dimensional array (list?) where teams[0] is team A and teams[1] is team B
 
     def teams_reset(self):
         """Resets the teams in the format [u'(?)', u'(?)', u'(?)', u'(?)', u'(?)']"""

@@ -2,10 +2,6 @@ import ibid
 from ibid.plugins import Processor, handler, match
 import random
 
-##### TO DO #####
-# Add !server to show IP but no pass
-# Figure out how ibid does databases so I can maybe make use of it
-# Add some admin commands like !forcemove/!forceremove/!forceadd and !swap
 
 class Pickup(Processor):
     event_types = (u'message', u'state') # Added 'state' to be able to handle joins/quits/nick change events

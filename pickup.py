@@ -6,20 +6,20 @@ import random
 class Pickup(Processor):
     event_types = (u'message', u'state') # Added 'state' to be able to handle joins/quits/nick change events
     addressed = False # Doesn't requre a person to say the bots name for the command to work
-    emptySlot = u'(?)'
-    gameOn = False
-    playerCount = 0
-    maxPlayers = 10
-    startDelay = 60
-    lastTeams = u''
-    serverIP = "154.127.61.63:27116"
-    serverPass = "apples"
+    empty_slot = u'(?)'
+    game_on = False
+    player_count = 0
+    max_players = 10
+    start_delay = 60
+    last_teams = u''
+    server_IP = "154.127.61.63:27116"
+    server_pass = "apples"
     permission = u'admin'
-    teams = [[emptySlot for x in range(5)] for x in range(2)] # Two dimensional array (list?) where teams[0] is team A and teams[1] is team B
+    teams = [[empty_slot for x in range(5)] for x in range(2)] # Two dimensional array (list?) where teams[0] is team A and teams[1] is team B
 
     def teams_reset(self):
         """Resets the teams in the format [u'(?)', u'(?)', u'(?)', u'(?)', u'(?)']"""
-        return [[self.emptySlot for x in range(5)] for x in range(2)]
+        return [[self.empty_slot for x in range(5)] for x in range(2)]
 
 
     def teams_display(self):
@@ -27,40 +27,75 @@ class Pickup(Processor):
         Looks like: TeamA[0/5]: (?), (?), (?), (?), (?) TeamB[0/5]: (?), (?), (?), (?), (?)"""
         team = ""
         def countPlayers(team):
-            playerCount = 0
+            player_count = 0
             for player in team:
                 if player != "(?)":
-                    playerCount += 1
-            return playerCount
-        playerCount = countPlayers(self.teams[0])
-        team = u'TeamA[%d/%d]: ' % (playerCount, len(self.teams[0]))
+                    player_count += 1
+            return player_count
+        player_count = countPlayers(self.teams[0])
+        team = u'TeamA[%d/%d]: ' % (player_count, len(self.teams[0]))
         team += u', '.join(self.teams[0])
-        playerCount = countPlayers(self.teams[1])
-        team += u' TeamB[%d/%d]: ' % (playerCount, len(self.teams[1]))
+        player_count = countPlayers(self.teams[1])
+        team += u' TeamB[%d/%d]: ' % (player_count, len(self.teams[1]))
         team += u', '.join(self.teams[1])
         return team
 
-    def startGame(self, event):
+    # I'm not sure if teams_neatify should be called inside of player_remove or
+    # inside the game_remove function right after the person has been removed?
+    # I'll put it in game_remove for now. (Also in nick_tracker and player_move)
+    # def teams_neatify(self):
+    #     """Rearranges the elements in the teams list so that all players names are shown
+    #     first followed by the open slots: ['Russ', 'Zoid', 'Berg', '(?)', '(?)']"""
+    #     for index, team in enumerate(self.teams):
+    #         player_count = 0
+    #         count = 0
+    #         for player in team:
+    #             if player != u'(?)':
+    #                 self.teams[index][count] = player
+    #                 player_count += 1
+    #                 count += 1
+    #     while player_count < 5:
+    #         self.teams[index][player_count] = u'(?)'
+    #         player_count += 1
+
+    # @match(r'^!shuffle$')
+    # @authorise
+    # def teams_shuffle(self):
+    #     """Shuffles the players"""
+    #     count = 0
+    #     shuffle_list = random.sample(teams[0]+teams[1], len(teams[0]+teams[1]))
+    #     for item in shuffle_list:
+    #         if count < 5:
+    #             teams[0][count] = shuffle_list[count]
+    #             count += 1
+    #         elif count >= 5 and count < 10:
+    #             teams[1][count - 5] = shuffle_list[count]
+    #             count += 1
+    #     self.teams_neatify()
+    #     event.addresponse(self.teams_display(), address=False)
+
+
+    def start_game(self, event):
         """Starts the game once the queue is full."""
-        if self.gameOn: # Checks if the game is still on
-            if self.playerCount == self.maxPlayers:
+        if self.game_on: # Checks if the game is still on
+            if self.player_count == self.max_players:
                 players = []
                 for team in range(2):
                     for player in range(len(self.teams[0])):
                         players.append(self.teams[team][player][1:-1])
-                self.gameOn = False
-                self.lastTeams = self.teams_display()
+                self.game_on = False
+                self.last_teams = self.teams_display()
                 event.addresponse(u'The game has started! PM\'ing all players the server details', address=False)
                 for player in players:
-                    event.addresponse(u'Paste this into your console to connect - password %s;connect %s' % (self.serverPass, self.serverIP), target=player, address=False)
-                self.playerCount = 0
-                self.lastTeams = self.teams_display()
+                    event.addresponse(u'Paste this into your console to connect - password %s;connect %s' % (self.server_pass, self.server_IP), target=player, address=False)
+                self.player_count = 0
+                self.last_teams = self.teams_display()
             else:
                 pass # Dunno
         else:
             pass # ayyyy lmao
 
-    def playerAdd(self, nick, team):
+    def player_add(self, nick, team):
         """Adds a player to a team.
         team a = 0, team b = 1"""
         if self.teams[team].count(u'(?)') == 0:
@@ -68,12 +103,12 @@ class Pickup(Processor):
             return
         else:
             for index, slot in enumerate(self.teams[team]):
-                if slot == self.emptySlot:
+                if slot == self.empty_slot:
                     self.teams[team][index] = u'(%s)' % nick
-                    self.playerCount += 1
+                    self.player_count += 1
                     return
 
-    def playerRemove(self, nick, team):
+    def player_remove(self, nick, team):
         """Removes a player from a team.
         team a = 0, team b = 1"""
         if self.teams[team].count(u'(%s)' % nick) != 1:
@@ -82,8 +117,8 @@ class Pickup(Processor):
         else:
             for index, slot in enumerate(self.teams[team]):
                 if slot == u'(%s)' % nick:
-                    self.teams[team][index] = self.emptySlot
-                    self.playerCount -= 1
+                    self.teams[team][index] = self.empty_slot
+                    self.player_count -= 1
                     return
 
     @match(r'^!(?:help|commands)$')
@@ -97,19 +132,19 @@ class Pickup(Processor):
         """Just displays some info. Not really needed but people kept using the command."""
         event.addresponse(u'GameBot based on Ibid. Pickup plugin by Russ. Type !help for more commands.', target=event['sender']['nick'], notice=True, address=False)
 
-    @match(r'^!lastteams$')
+    @match(r'^!last(?:teams|game)$')
     def lastteams(self, event):
-        if self.lastTeams == u'':
+        if self.last_teams == u'':
             event.addresponse(u'No last teams on record, perhaps bot reset?', address=False)
         else:
-            event.addresponse(self.lastTeams, address=False)
+            event.addresponse(self.last_teams, address=False)
 
     @match(r'^!(?:sg|start)$')
     def game_start(self, event):
         """Starts a new pickup and displays the teams in IRC."""
-        if not self.gameOn:
-            self.playerCount = 0
-            self.gameOn = True
+        if not self.game_on:
+            self.player_count = 0
+            self.game_on = True
             self.teams = self.teams_reset()
             event.addresponse(u'Game Started!', address=False)
             event.addresponse(self.teams_display(), address=False)
@@ -120,8 +155,8 @@ class Pickup(Processor):
     @authorise()
     def game_cancel(self, event):
         """Cancels the pickup if one is active."""
-        if self.gameOn:
-            self.gameOn = False
+        if self.game_on:
+            self.game_on = False
             event.addresponse(u'Game Cancelled.', address=False)
         else:
             event.addresponse(u'No game to cancel.', address=False)
@@ -129,9 +164,9 @@ class Pickup(Processor):
     @match(r'^!(?:status|teams|players)$')
     def game_status(self, event):
         """Displays the teams along with how many slots are open."""
-        if self.gameOn:
+        if self.game_on:
             event.addresponse(self.teams_display(), address=False)
-            openSlots = len(self.teams[0] + self.teams[1]) - self.playerCount
+            openSlots = len(self.teams[0] + self.teams[1]) - self.player_count
             event.addresponse(u'Open slots: %d' % openSlots, address=False)
         else:
             event.addresponse(u'There is no game in progress.', address=False)
@@ -139,23 +174,23 @@ class Pickup(Processor):
     @match(r'^!add\s?(\w?)$')
     def game_add(self, event, team=None):
         "Adds a player to a team or picks one at random if the team isn't specified."""
-        if self.gameOn:
+        if self.game_on:
             if u'(%s)' % event['sender']['nick'] not in self.teams[0] and u'(%s)' % event['sender']['nick'] not in self.teams[1]: # CHecks if the person isn't already added
                 if team == "":
                     if self.teams[0].count(u'(?)') == 0: # Checks if team A is full, adds to B if it is
-                        self.playerAdd(event['sender']['nick'], 1)
+                        self.player_add(event['sender']['nick'], 1)
                         event.addresponse(self.teams_display(), address=False)
                     elif self.teams[1].count(u'(?)') == 0: # Checks if team B is full, adds to A if it is
-                        self.playerAdd(event['sender']['nick'], 0)
+                        self.player_add(event['sender']['nick'], 0)
                         event.addresponse(self.teams_display(), address=False)
                     else: # If neither team A nor team B are full then it picks one at random
-                        self.playerAdd(event['sender']['nick'], random.randint(0,1))
+                        self.player_add(event['sender']['nick'], random.randint(0,1))
                         event.addresponse(self.teams_display(), address=False)
                 elif team.lower() == "a":
-                    self.playerAdd(event['sender']['nick'], 0)
+                    self.player_add(event['sender']['nick'], 0)
                     event.addresponse(self.teams_display(), address=False)
                 elif team.lower() == "b":
-                    self.playerAdd(event['sender']['nick'], 1)
+                    self.player_add(event['sender']['nick'], 1)
                     event.addresponse(self.teams_display(), address=False)
                 else:
                     event.addresponse(u'Invalid team selected', address=False)
@@ -164,20 +199,22 @@ class Pickup(Processor):
         else:
             event.addresponse(u'There is no game to add to.', address=False)
 
-        if self.playerCount == self.maxPlayers: # Checks if the game is full and triggers a timer to start the game
-            event.addresponse(u'Game is full! You have %d seconds to make changes before the game starts.' % self.startDelay, address=False)
-            ibid.dispatcher.call_later(self.startDelay, self.startGame, event)
+        if self.player_count == self.max_players: # Checks if the game is full and triggers a timer to start the game
+            event.addresponse(u'Game is full! You have %d seconds to make changes before the game starts.' % self.start_delay, address=False)
+            ibid.dispatcher.call_later(self.start_delay, self.start_game, event)
 
     @match(r'^!(?:rem|rm|remove|removeme|quit|leave)$')
     def game_remove(self, event):
         """Removes a player from the game."""
-        if self.gameOn:
+        if self.game_on:
             if u'(%s)' % event['sender']['nick'] in self.teams[0] or u'(%s)' % event['sender']['nick'] in self.teams[1]: # Checks if the player is even added
                 if u'(%s)' % event['sender']['nick'] in self.teams[0]: # If person is in team A
-                    self.playerRemove(event['sender']['nick'], 0)
+                    self.player_remove(event['sender']['nick'], 0)
+                    #self.teams_neatify()
                     event.addresponse(self.teams_display(), address=False)
                 if u'(%s)' % event['sender']['nick'] in self.teams[1]: # If person is in team B
-                    self.playerRemove(event['sender']['nick'], 1)
+                    self.player_remove(event['sender']['nick'], 1)
+                    #self.teams_neatify()
                     event.addresponse(self.teams_display(), address=False)
             else:
                 event.addresponse(u'You\'re not added to the pickup', address=False)
@@ -185,9 +222,9 @@ class Pickup(Processor):
             event.addresponse(u'No game to remove from.', address=False)
 
     @match(r'^!(?:move|moveme)$')
-    def playerMove(self, event):
+    def player_move(self, event):
         """Moves a player to the opposite team."""
-        if self.gameOn:
+        if self.game_on:
             if self.teams[0].count(u'(?)') >= 1: # This just checks if both teams have space or not
                 teamASpace = True
             if self.teams[0].count(u'(?)') >= 1:
@@ -195,13 +232,15 @@ class Pickup(Processor):
             if u'(%s)' % event['sender']['nick'] in self.teams[0] or u'(%s)' % event['sender']['nick'] in self.teams[1]: # If the person is added
                 if u'(%s)' % event['sender']['nick'] in self.teams[0]: # If the person is in team A
                     if teamBSpace:
-                        self.playerRemove(event['sender']['nick'], 0)
-                        self.playerAdd(event['sender']['nick'], 1)
+                        self.player_remove(event['sender']['nick'], 0)
+                        self.player_add(event['sender']['nick'], 1)
+                        #self.teams_neatify()
                         event.addresponse(self.teams_display(), address=False)
                 elif u'(%s)' % event['sender']['nick'] in self.teams[1]: # If the person is in team B
                     if teamASpace:
-                        self.playerRemove(event['sender']['nick'], 1)
-                        self.playerAdd(event['sender']['nick'], 0)
+                        self.player_remove(event['sender']['nick'], 1)
+                        self.player_add(event['sender']['nick'], 0)
+                        #self.teams_neatify()
                         event.addresponse(self.teams_display(), address=False)
             else:
                 event.addresponse(u'You\'re not added to the game.', address=False)
@@ -221,21 +260,23 @@ class Pickup(Processor):
     # For nick change tracking we discard the offline event and make use of 'othername'
     # from the online event to change the persons nick in the pickup if added.
     @handler
-    def nickTracker(self, event):
+    def nick_tracker(self, event):
         """Tracks nicks joining, leaving or changing."""
         if event.type == u'state': # There may be other events happening, we don't care about them.
             if event.state == u'online': # This catches people joining the channel or nick change
                 if hasattr(event, 'othername'): # This checks if the event is from a nick change
                     if u'(%s)' % event['othername'] in self.teams[0] or u'(%s)' % event['othername'] in self.teams[1]:
                         if u'(%s)' % event['othername'] in self.teams[0]:
-                            self.playerRemove(event['othername'], 0)
-                            self.playerAdd(event['sender']['nick'], 0)
+                            self.player_remove(event['othername'], 0)
+                            self.player_add(event['sender']['nick'], 0)
+                            #self.teams_neatify()
                         elif u'(%s)' % event['othername'] in self.teams[1]:
-                            self.playerRemove(event['othername'], 1)
-                            self.playerAdd(event['sender']['nick'], 1)
+                            self.player_remove(event['othername'], 1)
+                            self.player_add(event['sender']['nick'], 1)
+                            #self.teams_neatify()
                 else: # If the event wasn't from a nick change then it's because someone joined the channel
-                    if self.gameOn: # If a game is on we want to notify the player about it
-                        openSlots = len(self.teams[0] + self.teams[1]) - self.playerCount
+                    if self.game_on: # If a game is on we want to notify the player about it
+                        openSlots = len(self.teams[0] + self.teams[1]) - self.player_count
                         event.addresponse(u'Pickup in progress, %d slots open, !add to join.' % openSlots, target=event['sender']['nick'], notice=True, address=False)
                         event.addresponse(self.teams_display(), target=event['sender']['nick'], notice=True, address=False)
             elif event.state == u'offline': # This catches people leaving the channel or nick change
@@ -243,8 +284,10 @@ class Pickup(Processor):
                     pass
                 elif u'(%s)' % event['sender']['nick'] in self.teams[0] or u'(%s)' % event['sender']['nick'] in self.teams[1]: # If the nick that left is added to the pickup
                     if u'(%s)' % event['sender']['nick'] in self.teams[0]: # If the person was added to team A
-                        self.playerRemove(event['sender']['nick'], 0)
+                        self.player_remove(event['sender']['nick'], 0)
+                        #self.teams_neatify()
                         event.addresponse(self.teams_display(), address=False)
                     elif u'(%s)' % event['sender']['nick'] in self.teams[1]: # If the person was added to team B
-                        self.playerRemove(event['sender']['nick'], 1)
+                        self.player_remove(event['sender']['nick'], 1)
+                        #self.teams_neatify()
                         event.addresponse(self.teams_display(), address=False)

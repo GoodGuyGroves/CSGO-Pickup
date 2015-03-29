@@ -61,7 +61,7 @@ class Pickup(Processor):
             pass # Dunno
 
     def playerAdd(self, nick, team):
-        """Adds a player to a team. 
+        """Adds a player to a team.
         team a = 0, team b = 1"""
         if self.teams[team].count(u'(?)') == 0:
             event.addresponse(u'Team full!', address=False)
@@ -72,9 +72,9 @@ class Pickup(Processor):
                     self.teams[team][index] = u'(%s)' % nick
                     self.playerCount += 1
                     return
-    
+
     def playerRemove(self, nick, team):
-        """Removes a player from a team. 
+        """Removes a player from a team.
         team a = 0, team b = 1"""
         if self.teams[team].count(u'(%s)' % nick) != 1:
             event.addresponse(u'Player not added', address=False)
@@ -86,7 +86,7 @@ class Pickup(Processor):
                     self.playerCount -= 1
                     return
 
-    @match(r'^(?:!help|!commands)$')
+    @match(r'^!(?:help|commands)$')
     def help(self, event):
         """Displays help in IRC."""
         event.addresponse(u'!sg to create a new game. !add (or !add [a|b]) to add to it. !rem to remove from the pickup. !teams to see players added.', target=event['sender']['nick'], notice=True, address=False)
@@ -104,7 +104,7 @@ class Pickup(Processor):
         else:
             event.addresponse(self.lastTeams, address=False)
 
-    @match(r'^(?:!sg|!start)$')
+    @match(r'^!(?:sg|start)$')
     def game_start(self, event):
         """Starts a new pickup and displays the teams in IRC."""
         if not self.gameOn:
@@ -116,7 +116,7 @@ class Pickup(Processor):
         else:
             event.addresponse(u'Game already started!', address=False)
 
-    @match(r'^(?:!cg|!cancel)$')
+    @match(r'^!(?:cg|cancel)$')
     def game_cancel(self, event):
         """Cancels the pickup if one is active."""
         if self.gameOn:
@@ -125,7 +125,7 @@ class Pickup(Processor):
         else:
             event.addresponse(u'No game to cancel.', address=False)
 
-    @match(r'^(?:!status|!teams|!players)$')
+    @match(r'^!(?:status|teams|players)$')
     def game_status(self, event):
         """Displays the teams along with how many slots are open."""
         if self.gameOn:
@@ -166,8 +166,8 @@ class Pickup(Processor):
         if self.playerCount == self.maxPlayers: # Checks if the game is full and triggers a timer to start the game
             event.addresponse(u'Game is full! You have %d seconds to make changes before the game starts.' % self.startDelay, address=False)
             ibid.dispatcher.call_later(self.startDelay, self.startGame, event)
-            
-    @match(r'^(?:!rem|!rm|!remove|!removeme|!quit|!leave)$')
+
+    @match(r'^!(?:rem|rm|remove|removeme|quit|leave)$')
     def game_remove(self, event):
         """Removes a player from the game."""
         if self.gameOn:
@@ -182,8 +182,8 @@ class Pickup(Processor):
                 event.addresponse(u'You\'re not added to the pickup', address=False)
         else:
             event.addresponse(u'No game to remove from.', address=False)
-            
-    @match(r'^(?:!move|!moveme)$')
+
+    @match(r'^!(?:move|moveme)$')
     def playerMove(self, event):
         """Moves a player to the opposite team."""
         if self.gameOn:
@@ -206,7 +206,7 @@ class Pickup(Processor):
                 event.addresponse(u'You\'re not added to the game.', address=False)
         else:
             event.addresponse(u'No game in progress.', address=False)
-            
+
 
     # So because we're not capturing text from the chat for this, we must make
     # use of @handler instead of @match which will let us get access to other

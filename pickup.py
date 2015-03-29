@@ -1,5 +1,5 @@
 import ibid
-from ibid.plugins import Processor, handler, match
+from ibid.plugins import Processor, handler, match, authorise
 import random
 
 
@@ -14,6 +14,7 @@ class Pickup(Processor):
     lastTeams = u''
     serverIP = "154.127.61.63:27116"
     serverPass = "apples"
+    permission = u'admin'
     teams = [[emptySlot for x in range(5)] for x in range(2)] # Two dimensional array (list?) where teams[0] is team A and teams[1] is team B
 
     def teams_reset(self):
@@ -41,20 +42,23 @@ class Pickup(Processor):
 
     def startGame(self, event):
         """Starts the game once the queue is full."""
-        if self.playerCount == self.maxPlayers:
-            players = []
-            for team in range(2):
-                for player in range(len(self.teams[0])):
-                    players.append(self.teams[team][player][1:-1])
-            self.gameOn = False
-            self.lastTeams = self.teams_display()
-            event.addresponse(u'The game has started! PM\'ing all players the server details', address=False)
-            for player in players:
-                event.addresponse(u'Paste this into your console to connect - password %s;connect %s' % (self.serverPass, self.serverIP), target=player, address=False)
-            self.playerCount = 0
-            self.lastTeams = self.teams_display()
+        if self.gameOn: # Checks if the game is still on
+            if self.playerCount == self.maxPlayers:
+                players = []
+                for team in range(2):
+                    for player in range(len(self.teams[0])):
+                        players.append(self.teams[team][player][1:-1])
+                self.gameOn = False
+                self.lastTeams = self.teams_display()
+                event.addresponse(u'The game has started! PM\'ing all players the server details', address=False)
+                for player in players:
+                    event.addresponse(u'Paste this into your console to connect - password %s;connect %s' % (self.serverPass, self.serverIP), target=player, address=False)
+                self.playerCount = 0
+                self.lastTeams = self.teams_display()
+            else:
+                pass # Dunno
         else:
-            pass # Dunno
+            pass # ayyyy lmao
 
     def playerAdd(self, nick, team):
         """Adds a player to a team.
@@ -92,7 +96,7 @@ class Pickup(Processor):
     def info(self, event):
         """Just displays some info. Not really needed but people kept using the command."""
         event.addresponse(u'GameBot based on Ibid. Pickup plugin by Russ. Type !help for more commands.', target=event['sender']['nick'], notice=True, address=False)
-        
+
     @match(r'^!lastteams$')
     def lastteams(self, event):
         if self.lastTeams == u'':
@@ -113,6 +117,7 @@ class Pickup(Processor):
             event.addresponse(u'Game already started!', address=False)
 
     @match(r'^!(?:cg|cancel)$')
+    @authorise()
     def game_cancel(self, event):
         """Cancels the pickup if one is active."""
         if self.gameOn:
@@ -241,5 +246,5 @@ class Pickup(Processor):
                         self.playerRemove(event['sender']['nick'], 0)
                         event.addresponse(self.teams_display(), address=False)
                     elif u'(%s)' % event['sender']['nick'] in self.teams[1]: # If the person was added to team B
-                        self.playerRemove(event['sender']['nick'])
+                        self.playerRemove(event['sender']['nick'], 1)
                         event.addresponse(self.teams_display(), address=False)

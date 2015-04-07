@@ -2,7 +2,7 @@ import ibid
 from ibid.plugins import Processor, handler, match, authorise
 import random
 import datetime
-
+import valve.source.a2s
 
 class Pickup(Processor):
     event_types = (u'message', u'state') # Added 'state' to be able to handle joins/quits/nick change events
@@ -13,10 +13,24 @@ class Pickup(Processor):
     max_players = 10
     start_delay = 60
     last_teams = u''
-    server_IP = "154.127.61.63:27116"
-    server_pass = "apples"
     permission = u'admin'
+    servers = [("154.127.61.63", 27116), ('196.25.210.12', 27019), ('105.227.0.9', 2701), ('105.227.0.9', 27018)]
+    passwords = ['apples', 'dgl4', 'dgl16', 'dgl15']
     teams = [[empty_slot for x in range(5)] for x in range(2)] # Two dimensional array (list?) where teams[0] is team A and teams[1] is team B
+
+    def get_open_server(self):
+        def check_servers(self):
+            for server in self.servers:
+                server = valve.source.a2s.ServerQuerier(server)
+                info = server.get_info()
+                if info['player_count'] < 1:
+                    return (serber.host, server.port)
+        active_server = check_servers()
+        if active_server == None:
+            return u'No empty server to use, perhaps wait for a game to finish or organise another server.'
+        active_password = self.passwords[self.servers.index(active_server)]
+        connect_string = u'password %s; connect %s:%d' % (active_password, active_server[0], active_server[1])
+        return connect_string
 
     def teams_reset(self):
         """Resets the teams in the format [u'(?)', u'(?)', u'(?)', u'(?)', u'(?)']"""
@@ -89,12 +103,11 @@ class Pickup(Processor):
                 self.game_on = False
                 self.last_teams = self.teams_display()
                 event.addresponse(u'The game has started! PM\'ing all players the server details', address=False)
+                server_info = self.get_open_server()
                 for player in players:
-                    event.addresponse(u'Paste this into your console to connect - password %s;connect %s' % (self.server_pass, self.server_IP), target=player, address=False)
+                    event.addresponse(u'Paste this into your console to connect - %s' % server_info, target=player, address=False)
                 self.player_count = 0
-                self.last_teams = datetime.datetime.now().strftime('%H:%M:%S')
-                self.last_teams += " "
-                self.last_teams += self.teams_display()
+                self.last_teams = "[%s] %s" % (datetime.datetime.now().strftime('%H:%M:%S'), self.teams_display())
             else:
                 pass # Dunno
         else:

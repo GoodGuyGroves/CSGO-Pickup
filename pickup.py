@@ -100,7 +100,7 @@ class Pickup(Processor):
         else:
             pass # ayyyy lmao
 
-    def player_remove(self, nick, team):
+    def player_remove(self, event, nick, team):
         """Removes a player from a team.
         team a = 0, team b = 1"""
         if self.teams[team].count(u'(%s)' % nick) != 1:
@@ -124,7 +124,7 @@ class Pickup(Processor):
                     self.player_count += 1
                     event.addresponse(self.teams_display(), address=False)
                     return
-        if u'(%s)' % nick not in self.teams[0] or u'(%s)' % nick not in self.teams[1]: # Checks if the player isn't already added
+        if u'(%s)' % nick not in self.teams[0] and u'(%s)' % nick not in self.teams[1]: # Checks if the player isn't already added
             if team != "": # If a team was specified
                 if team.lower() == u'a':
                     if self.teams[0].count(u'(?)') != 0:
@@ -139,11 +139,11 @@ class Pickup(Processor):
                 else:
                     event.addresponse(u'Invalid team selection.', address=False) # This never triggers?
             else: # If a team wasn't specified then random
-                if self.teams[0].count(u'(?)') == 0: # If team A is full just add straight to B
+                if self.teams[0].count(u'(?)') == 0 and u'(%s)' % nick not in self.teams[1]: # If team A is full and the player isn't already in B then just add straight to B
                     add(self, nick, 1)
-                elif self.teams[1].count(u'(?)') == 0: # If team B is full just add straight to A
+                elif self.teams[1].count(u'(?)') == 0 and u'(%s)' % nick not in self.teams[0]: # Same as above
                     add(self, nick, 0)
-                else: # If neither A not B are full then random between the two
+                elif u'(%s)' % nick not in self.teams[0] and u'(%s)' % nick not in self.teams[1]: # If neither A nor B are full then random between the two
                     add(self, nick, random.randint(0,1))
         else:
             event.addresponse(u'%s is already added' % nick, address=False)
@@ -214,10 +214,10 @@ class Pickup(Processor):
         if self.game_on:
             if u'(%s)' % event['sender']['nick'] in self.teams[0] or u'(%s)' % event['sender']['nick'] in self.teams[1]: # Checks if the player is even added
                 if u'(%s)' % event['sender']['nick'] in self.teams[0]: # If person is in team A
-                    self.player_remove(event['sender']['nick'], 0)
+                    self.player_remove(event, event['sender']['nick'], 0)
                     event.addresponse(self.teams_display(), address=False)
                 if u'(%s)' % event['sender']['nick'] in self.teams[1]: # If person is in team B
-                    self.player_remove(event['sender']['nick'], 1)
+                    self.player_remove(event, event['sender']['nick'], 1)
                     event.addresponse(self.teams_display(), address=False)
             else:
                 event.addresponse(u'You\'re not added to the pickup', address=False)
@@ -235,11 +235,11 @@ class Pickup(Processor):
             if u'(%s)' % event['sender']['nick'] in self.teams[0] or u'(%s)' % event['sender']['nick'] in self.teams[1]: # If the person is added
                 if u'(%s)' % event['sender']['nick'] in self.teams[0]: # If the person is in team A
                     if teamBSpace:
-                        self.player_remove(event['sender']['nick'], 0)
+                        self.player_remove(event, event['sender']['nick'], 0)
                         self.player_add(event, event['sender']['nick'], u'b')
                 elif u'(%s)' % event['sender']['nick'] in self.teams[1]: # If the person is in team B
                     if teamASpace:
-                        self.player_remove(event['sender']['nick'], 1)
+                        self.player_remove(event, event['sender']['nick'], 1)
                         self.player_add(event, event['sender']['nick'], u'a')
             else:
                 event.addresponse(u'You\'re not added to the game.', address=False)
@@ -284,10 +284,10 @@ class Pickup(Processor):
                 if hasattr(event, 'othername'): # This checks if the event is from a nick change
                     if u'(%s)' % event['othername'] in self.teams[0] or u'(%s)' % event['othername'] in self.teams[1]:
                         if u'(%s)' % event['othername'] in self.teams[0]:
-                            self.player_remove(event['othername'], 0)
+                            self.player_remove(event, event['othername'], 0)
                             self.player_add(event['sender']['nick'], u'a')
                         elif u'(%s)' % event['othername'] in self.teams[1]:
-                            self.player_remove(event['othername'], 1)
+                            self.player_remove(event, event['othername'], 1)
                             self.player_add(event['sender']['nick'], u'b')
                 else: # If the event wasn't from a nick change then it's because someone joined the channel
                     if self.game_on: # If a game is on we want to notify the player about it
@@ -299,8 +299,8 @@ class Pickup(Processor):
                     pass
                 elif u'(%s)' % event['sender']['nick'] in self.teams[0] or u'(%s)' % event['sender']['nick'] in self.teams[1]: # If the nick that left is added to the pickup
                     if u'(%s)' % event['sender']['nick'] in self.teams[0]: # If the person was added to team A
-                        self.player_remove(event['sender']['nick'], 0)
+                        self.player_remove(event, event['sender']['nick'], 0)
                         event.addresponse(self.teams_display(), address=False)
                     elif u'(%s)' % event['sender']['nick'] in self.teams[1]: # If the person was added to team B
-                        self.player_remove(event['sender']['nick'], 1)
+                        self.player_remove(event, event['sender']['nick'], 1)
                         event.addresponse(self.teams_display(), address=False)

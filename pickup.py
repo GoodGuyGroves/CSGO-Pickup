@@ -16,8 +16,8 @@ class Pickup(Processor):
     start_delay = 60
     last_teams = u''
     permission = u'admin'
-    servers = [("154.127.61.63", 27116), ('196.25.210.12', 27019), ('105.227.0.9', 2701), ('105.227.0.9', 27018)]
-    passwords = ['apples', 'dgl4', 'dgl16', 'dgl15']
+    servers = [("154.127.61.63", 27116), ('41.76.106.235', 31070 ), ('196.25.210.12', 27019), ('105.227.0.9', 2701), ('105.227.0.9', 27018)]
+    passwords = ['apples', 'frag8', 'dgl4', 'dgl16', 'dgl15']
     teams = [[empty_slot for x in range(5)] for x in range(2)] # Two dimensional array (list?) where teams[0] is team A and teams[1] is team B
 
     def get_open_server(self):
@@ -128,6 +128,8 @@ class Pickup(Processor):
                     self.teams[team][index] = self.empty_slot
                     self.player_count -= 1
                     self.teams_neatify()
+                    if self.game_full:
+                        self.game_full = False
                     return
 
     def player_add(self, event, nick, team):

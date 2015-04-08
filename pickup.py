@@ -4,11 +4,13 @@ import random
 import datetime
 import valve.source.a2s
 
+
 class Pickup(Processor):
     event_types = (u'message', u'state') # Added 'state' to be able to handle joins/quits/nick change events
     addressed = False # Doesn't requre a person to say the bots name for the command to work
     empty_slot = u'(?)'
     game_on = False
+    game_full = False
     player_count = 0
     max_players = 10
     start_delay = 60
@@ -24,8 +26,8 @@ class Pickup(Processor):
                 server = valve.source.a2s.ServerQuerier(server)
                 info = server.get_info()
                 if info['player_count'] < 1:
-                    return (serber.host, server.port)
-        active_server = check_servers()
+                    return (server.host, server.port)
+        active_server = check_servers(self)
         if active_server == None:
             return u'No empty server to use, perhaps wait for a game to finish or organise another server.'
         active_password = self.passwords[self.servers.index(active_server)]
@@ -107,6 +109,7 @@ class Pickup(Processor):
                 for player in players:
                     event.addresponse(u'Paste this into your console to connect - %s' % server_info, target=player, address=False)
                 self.player_count = 0
+                self.game_full = False
                 self.last_teams = "[%s] %s" % (datetime.datetime.now().strftime('%H:%M:%S'), self.teams_display())
             else:
                 pass # Dunno
@@ -201,7 +204,7 @@ class Pickup(Processor):
         else:
             event.addresponse(u'No game to cancel.', address=False)
 
-    @match(r'^!(?:status|teams|players)$')
+    @match(r'^!(?:status|teams|players|game)$')
     def game_status(self, event):
         """Displays the teams along with how many slots are open."""
         if self.game_on:
@@ -217,7 +220,8 @@ class Pickup(Processor):
             self.player_add(event, event['sender']['nick'], team)
         else:
             event.addresponse(u'No game in progress.', address=False)
-        if self.player_count == self.max_players: # Checks if the game is full and triggers a timer to start the game
+        if self.player_count == self.max_players and not self.game_full: # Checks if the game is full and triggers a timer to start the game
+            self.game_full = True
             event.addresponse(u'Game is full! You have %d seconds to make changes before the game starts.' % self.start_delay, address=False)
             ibid.dispatcher.call_later(self.start_delay, self.start_game, event)
 
@@ -265,6 +269,10 @@ class Pickup(Processor):
         if self.game_on:
             if player != "":
                 self.player_add(event, player, team)
+                if self.player_count == self.max_players and not self.game_full: # Checks if the game is full and triggers a timer to start the game
+                    self.game_full = True
+                    event.addresponse(u'Game is full! You have %d seconds to make changes before the game starts.' % self.start_delay, address=False)
+                    ibid.dispatcher.call_later(self.start_delay, self.start_game, event)
             else:
                 event.addresponse(u'Specify a name to add', address=False)
         else:

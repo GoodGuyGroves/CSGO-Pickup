@@ -3,6 +3,7 @@ from ibid.plugins import Processor, handler, match, authorise
 import random
 import datetime
 import valve.source.a2s
+from valve.source.a2s import NoResponseError
 
 
 class Pickup(Processor):
@@ -24,9 +25,12 @@ class Pickup(Processor):
         def check_servers(self):
             for server in self.servers:
                 server = valve.source.a2s.ServerQuerier(server)
-                info = server.get_info()
-                if info['player_count'] < 1:
-                    return (server.host, server.port)
+                try:
+                    info = server.get_info()
+                    if info['player_count'] < 1:
+                        return (server.host, server.port)
+                except NoResponseError as e:
+                    pass
         active_server = check_servers(self)
         if active_server == None:
             return u'No empty server to use, perhaps wait for a game to finish or organise another server.'
